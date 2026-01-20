@@ -1,0 +1,22 @@
+generator client {
+  provider        = "prisma-client"
+  output          = "../app/generated/prisma"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Video {
+  id            String   @id @default(uuid())
+  muxUploadId   String?   @unique // Upload ID (available immediately)
+  muxAssetId    String?  @unique // Asset ID (created AFTER file upload)
+  muxPlaybackId String?
+  status        String   // UPLOADING, UPLOADED, PROCESSING, READY, FAILED
+  transcript    String?  @db.Text
+  summary       String?  @db.Text
+  description   String?  @db.Text
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
