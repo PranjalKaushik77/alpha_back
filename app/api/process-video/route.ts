@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
 
             const summaryPrompt = `Provide ONE concise summary (2-3 sentences) of this video transcript. Do not provide options or a list. Output only the summary: \n\n${transcript}`;
 
-            const descriptionPrompt = `Write ONE catchy, high-conversion video description based on this transcript. Include 3-4 bullet points of key takeaways and relevant hashtags. Do not provide multiple versions or choices. Output the final text only: \n\n${transcript}`;
+            const descriptionPrompt = `Write ONE catchy, high-conversion video description based on this transcript. Include 3-4 bullet points of key takeaways and relevant hashtags. Do not provide multiple versions or choices. Output the final text only, and should return only one description without any options.: \n\n${transcript}`;
           // Run Gemini generation
           const [summaryResult, descriptionResult] = await Promise.all([
             model.generateContent(summaryPrompt),

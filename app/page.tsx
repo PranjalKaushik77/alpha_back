@@ -236,7 +236,7 @@ export default function VideoPipeline() {
                 </div>
                 <div>
                   <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
-                    Video Processing Studio
+                    AlphaHub
                   </h1>
                   <p className="text-slate-400 text-sm">
                     Upload, process, and browse AI-enriched videos
