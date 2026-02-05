@@ -3,16 +3,14 @@ import prisma from "@/lib/prisma";
 
 export const runtime = "nodejs";
 
-interface RouteParams {
-  params: {
-    id: string;
-  };
-}
-
-export async function GET(_req: NextRequest, { params }: RouteParams) {
+export async function GET(
+  _req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
+    const { id } = await params;
     const video = await prisma.video.findUnique({
-      where: { id: params.id },
+      where: { id },
     });
 
     if (!video) {
