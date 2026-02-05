@@ -9,14 +9,32 @@ datasource db {
 }
 
 model Video {
-  id            String   @id @default(uuid())
-  muxUploadId   String?   @unique // Upload ID (available immediately)
-  muxAssetId    String?  @unique // Asset ID (created AFTER file upload)
-  muxPlaybackId String?
-  status        String   // UPLOADING, UPLOADED, PROCESSING, READY, FAILED
-  transcript    String?  @db.Text
-  summary       String?  @db.Text
-  description   String?  @db.Text
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id              String   @id @default(uuid())
+  muxUploadId     String?  @unique
+  muxAssetId      String?  @unique
+  muxPlaybackId   String?
+  status          String
+  transcript      String?
+  summary         String?
+  description     String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  isLiveRecording Boolean  @default(false)
+  liveStreamMuxId String?
+
+  @@index([isLiveRecording])
+  @@index([status])
+}
+
+model liveStream {
+  id              String    @id
+  muxLiveStreamId String    @unique
+  streamKey       String    @unique
+  muxPlaybackId   String?
+  status          String    @default("IDLE")
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime
+  endedAt         DateTime?
+
+  @@index([status])
 }
