@@ -69,7 +69,8 @@ export default function VideoPipeline() {
       addLog(`ID: ${data.uploadId.slice(0, 12)}...`);
       setStatus("ready_to_upload");
     } catch (e) {
-      addLog(`❌ ${e.message}`);
+      const message = e instanceof Error ? e.message : String(e);
+      addLog(`❌ ${message}`);
       setStatus("error");
     }
   };
@@ -166,7 +167,8 @@ export default function VideoPipeline() {
         setStatus("uploaded");
       }
     } catch (e) {
-      addLog(`❌ ${e.message}`);
+      const message = e instanceof Error ? e.message : String(e);
+      addLog(`❌ ${message}`);
       setStatus("error");
     }
   };
@@ -203,7 +205,8 @@ export default function VideoPipeline() {
       addLog("✓ Processing complete!");
       setStatus("complete");
     } catch (e) {
-      addLog(`❌ ${e.message}`);
+      const message = e instanceof Error ? e.message : String(e);
+      addLog(`❌ ${message}`);
       setStatus("error");
     }
   };
@@ -304,7 +307,7 @@ export default function VideoPipeline() {
               </div>
               <button
                 onClick={handleCreateUpload}
-                disabled={uploadData}
+                disabled={!uploadData}
                 className="w-full py-2.5 px-4 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 disabled:from-green-600 disabled:to-green-700 disabled:opacity-75 text-white rounded-lg font-medium transition-all duration-200 disabled:cursor-not-allowed"
               >
                 {uploadData ? "✓ Upload URL Ready" : "Get Upload URL"}
