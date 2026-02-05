@@ -10,7 +10,7 @@ export default function VideoPipeline() {
   const [processResult, setProcessResult] = useState(null);
   const [progress, setProgress] = useState(0);
 
-  const addLog = (msg) => {
+  const addLog = (msg: string) => {
     const time = new Date().toISOString().split("T")[1].split(".")[0];
     setLogs((prev) => [...prev, { time, msg, id: Date.now() }]);
   };
