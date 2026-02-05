@@ -1,8 +1,5 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { Prisma } from "@prisma/client";
-
-
 
 export const runtime = "nodejs";
 
@@ -12,14 +9,11 @@ export async function GET() {
       orderBy: { createdAt: "desc" },
     });
 
-    // Shape data and provide a computed thumbnail URL fallback
-    const formatted = videos.map((video:Video) => {
+    const formatted = videos.map((video) => {
       const playbackId = video.muxPlaybackId || null;
-      const thumbnailUrl =
-        video.muxThumbnailUrl ||
-        (playbackId
-          ? `https://image.mux.com/${playbackId}/thumbnail.jpg?time=0`
-          : null);
+      const thumbnailUrl = playbackId
+        ? `https://image.mux.com/${playbackId}/thumbnail.jpg?time=0`
+        : null;
 
       return {
         id: video.id,

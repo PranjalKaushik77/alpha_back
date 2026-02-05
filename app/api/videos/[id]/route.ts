@@ -21,11 +21,9 @@ export async function GET(
     }
 
     const playbackId = video.muxPlaybackId || null;
-    const thumbnailUrl =
-      video.muxThumbnailUrl ||
-      (playbackId
-        ? `https://image.mux.com/${playbackId}/thumbnail.jpg?time=0`
-        : null);
+    const thumbnailUrl = playbackId
+      ? `https://image.mux.com/${playbackId}/thumbnail.jpg?time=0`
+      : null;
 
     return NextResponse.json({
       id: video.id,
