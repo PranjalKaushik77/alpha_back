@@ -1,15 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import {
-  Upload,
-  Zap,
-  CheckCircle2,
-  AlertCircle,
-  Clock,
-  FileVideo,
-  Sparkles,
-} from "lucide-react";
 
 export default function VideoPipeline() {
   const [status, setStatus] = useState("idle");
@@ -169,7 +160,9 @@ export default function VideoPipeline() {
           <div className="max-w-4xl mx-auto px-6 py-8">
             <div className="flex items-center gap-3 mb-2">
               <div className="p-2 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-lg">
-                <Sparkles className="w-5 h-5 text-white" />
+                <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                </svg>
               </div>
               <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
                 Video Processing Studio
@@ -207,7 +200,11 @@ export default function VideoPipeline() {
                     </p>
                   </div>
                 </div>
-                {uploadData && <CheckCircle2 className="w-5 h-5 text-green-500" />}
+                {uploadData && (
+                  <svg className="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                )}
               </div>
               <button
                 onClick={handleCreateUpload}
@@ -242,13 +239,20 @@ export default function VideoPipeline() {
                     </p>
                   </div>
                 </div>
-                {file && uploadData && <CheckCircle2 className="w-5 h-5 text-green-500" />}
+                {file && uploadData && (
+                  <svg className="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                )}
               </div>
 
               <div className="space-y-3">
                 <label className="block">
                   <div className="border-2 border-dashed border-slate-600 rounded-xl p-6 text-center cursor-pointer hover:border-slate-500 transition-colors">
-                    <FileVideo className="w-8 h-8 text-slate-400 mx-auto mb-2" />
+                    <svg className="w-8 h-8 text-slate-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
                     <p className="text-sm font-medium text-slate-300">
                       Click to select video
                     </p>
@@ -275,7 +279,9 @@ export default function VideoPipeline() {
                   disabled={!file || !uploadData || isUploading}
                   className="w-full py-3 px-4 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-500 hover:to-purple-600 disabled:opacity-50 text-white rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2 disabled:cursor-not-allowed"
                 >
-                  <Upload className="w-4 h-4" />
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19v-14m0 0l-7 7m7-7l7 7" />
+                  </svg>
                   {isUploading ? `Uploading... ${progress}%` : "Upload to Mux"}
                 </button>
 
@@ -314,7 +320,11 @@ export default function VideoPipeline() {
                     </p>
                   </div>
                 </div>
-                {isComplete && <CheckCircle2 className="w-5 h-5 text-green-500" />}
+                {isComplete && (
+                  <svg className="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                )}
               </div>
 
               <button
@@ -322,7 +332,9 @@ export default function VideoPipeline() {
                 disabled={!uploadData?.muxAssetId || isProcessing}
                 className="w-full py-3 px-4 bg-gradient-to-r from-cyan-600 to-cyan-700 hover:from-cyan-500 hover:to-cyan-600 disabled:opacity-50 text-white rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2 disabled:cursor-not-allowed"
               >
-                <Zap className="w-4 h-4" />
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0110 2v5H5a1 1 0 00-.82 1.573l7 10A1 1 0 0013 17v-5h5a1 1 0 00.82-1.573l-7-10a1 1 0 00-.82-.381z" clipRule="evenodd" />
+                  </svg>
                 {isProcessing ? "Processing..." : "Generate Summary"}
               </button>
 
@@ -338,7 +350,9 @@ export default function VideoPipeline() {
           {isComplete && processResult && (
             <div className="rounded-2xl border border-green-500/50 bg-green-500/5 p-8 mb-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
               <div className="flex items-center gap-2 mb-6">
-                <CheckCircle2 className="w-6 h-6 text-green-400" />
+                <svg className="w-6 h-6 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
                 <h2 className="text-xl font-bold text-white">Results</h2>
               </div>
 
@@ -370,7 +384,9 @@ export default function VideoPipeline() {
           <div className="rounded-2xl border border-slate-700 bg-slate-800/50 backdrop-blur overflow-hidden">
             <div className="px-6 py-4 border-b border-slate-700 bg-slate-900/50">
               <div className="flex items-center gap-2">
-                <Clock className="w-4 h-4 text-slate-400" />
+                <svg className="w-4 h-4 text-slate-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                </svg>
                 <h3 className="font-semibold text-white text-sm">Activity Log</h3>
                 <span className="ml-auto text-xs text-slate-500">
                   {logs.length} events
