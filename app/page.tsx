@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import MuxPlayer from "@mux/mux-player-react";
+import * as UpChunk from "@mux/upchunk";
 
 type LogEntry = {
   id: number;
@@ -52,6 +53,7 @@ export default function VideoPipeline() {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [selectedVideo, setSelectedVideo] = useState<VideoItem | null>(null);
   const [showTranscript, setShowTranscript] = useState<boolean>(true);
+  const [deletingVideoId, setDeletingVideoId] = useState<string | null>(null);
 
   const addLog = (msg: string) => {
     const time = new Date().toISOString().split("T")[1].split(".")[0];
@@ -105,68 +107,98 @@ export default function VideoPipeline() {
       addLog("❌ No file selected");
       return;
     }
-    if (!uploadData?.uploadUrl) {
-      addLog("❌ Get upload URL first");
-      return;
-    }
 
     try {
       setStatus("uploading");
       const sizeMB = (file.size / 1024 / 1024).toFixed(2);
       addLog(`⬆️  Uploading ${file.name} (${sizeMB} MB)...`);
-      setProgress(10);
+      setProgress(0);
 
-      const uploadResponse = await fetch(uploadData.uploadUrl, {
-        method: "PUT",
-        body: file,
-        headers: { "content-type": file.type || "video/mp4" },
+      let currentUploadId: string | null = null;
+
+      const upload = UpChunk.createUpload({
+        endpoint: async () => {
+          addLog("🔄 Creating upload session...");
+          const res = await fetch("/api/upload", { method: "POST" });
+          const data = await res.json();
+          if (!res.ok || data?.error) {
+            throw new Error(data?.error || "Failed to create upload session");
+          }
+
+          currentUploadId = data.uploadId;
+          setUploadData(data);
+          addLog("✓ Upload session created");
+          addLog(`ID: ${String(data.uploadId).slice(0, 12)}...`);
+
+          return data.uploadUrl as string;
+        },
+        file,
+        // chunkSize is in KB (must be multiple of 256KB)
+        chunkSize: 10240, // ~10MB chunks
       });
 
-      if (!uploadResponse.ok) {
-        const errorText = await uploadResponse.text();
-        throw new Error(`Upload failed: ${uploadResponse.status}`);
-      }
+      upload.on("progress", (p: any) => {
+        const pct = typeof p?.detail === "number" ? p.detail : 0;
+        setProgress(Math.max(0, Math.min(100, Math.round(pct))));
+      });
 
-      setProgress(80);
-      addLog("✓ File uploaded to Mux");
-      addLog("⏳ Waiting for asset creation...");
+      upload.on("error", (err: any) => {
+        const message =
+          err?.detail?.message ||
+          err?.detail ||
+          "Upload failed. Please retry (resumable uploads should continue).";
+        addLog(`❌ ${message}`);
+        setStatus("error");
+      });
 
-      await new Promise((r) => setTimeout(r, 3000));
-
-      let assetId = null;
-      let videoId = null;
-
-      for (let attempt = 1; attempt <= 5; attempt++) {
-        setProgress(80 + (attempt / 5) * 10);
-        const checkRes = await fetch("/api/check-upload", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ uploadId: uploadData.uploadId }),
-        });
-
-        if (!checkRes.ok) throw new Error("Check upload failed");
-
-        const checkData = await checkRes.json();
-        if (checkData.assetId) {
-          assetId = checkData.assetId;
-          videoId = checkData.video?.id || null;
-          break;
-        }
-
-        if (attempt < 5) {
-          await new Promise((r) => setTimeout(r, 2000));
-        }
-      }
-
-      if (assetId) {
-        addLog(`✓ Asset created: ${assetId.slice(0, 12)}...`);
-        setUploadData({ ...uploadData, muxAssetId: assetId, videoId });
+      upload.on("success", async () => {
+        addLog("✓ File uploaded to Mux");
+        addLog("⏳ Waiting for asset creation...");
         setProgress(100);
-        setStatus("uploaded");
-      } else {
-        addLog("⚠️  Asset not ready yet");
-        setStatus("uploaded");
-      }
+
+        const uploadIdToCheck = currentUploadId || uploadData?.uploadId || null;
+        if (!uploadIdToCheck) {
+          addLog("⚠️ Missing upload ID; cannot check asset status yet.");
+          setStatus("uploaded");
+          return;
+        }
+
+        await new Promise((r) => setTimeout(r, 2000));
+
+        let assetId: string | null = null;
+        let videoId: string | null = null;
+
+        // More patience here helps avoid false "not ready yet" for bigger files
+        for (let attempt = 1; attempt <= 15; attempt++) {
+          const checkRes = await fetch("/api/check-upload", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ uploadId: uploadIdToCheck }),
+          });
+
+          if (!checkRes.ok) throw new Error("Check upload failed");
+
+          const checkData = await checkRes.json();
+          if (checkData.assetId) {
+            assetId = checkData.assetId;
+            videoId = checkData.video?.id || null;
+            break;
+          }
+
+          if (attempt < 15) {
+            await new Promise((r) => setTimeout(r, 1500));
+          }
+        }
+
+        if (assetId) {
+          addLog(`✓ Asset created: ${assetId.slice(0, 12)}...`);
+          setUploadData((prev) => ({ ...(prev || {}), muxAssetId: assetId, videoId }) as any);
+          setStatus("uploaded");
+        } else {
+          addLog("⚠️  Asset not ready yet (Mux may still be processing)");
+          setStatus("uploaded");
+        }
+      });
     } catch (e) {
       const message = e instanceof Error ? e.message : String(e);
       addLog(`❌ ${message}`);
@@ -209,6 +241,31 @@ export default function VideoPipeline() {
       const message = e instanceof Error ? e.message : String(e);
       addLog(`❌ ${message}`);
       setStatus("error");
+    }
+  };
+
+  const handleDeleteVideo = async (video: VideoItem) => {
+    if (!video?.id) return;
+
+    try {
+      setDeletingVideoId(video.id);
+      addLog(`🗑️ Deleting video ${video.id.slice(0, 8)}...`);
+
+      const res = await fetch(`/api/videos/${video.id}`, { method: "DELETE" });
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok || data?.error) {
+        throw new Error(data?.error || "Failed to delete video");
+      }
+
+      setVideos((prev) => prev.filter((v) => v.id !== video.id));
+      setSelectedVideo(null);
+      addLog("✓ Video deleted");
+    } catch (e) {
+      const message = e instanceof Error ? e.message : String(e);
+      addLog(`❌ ${message}`);
+    } finally {
+      setDeletingVideoId(null);
     }
   };
 
@@ -317,10 +374,10 @@ export default function VideoPipeline() {
 
                 {/* Step 2: Upload */}
             <div className={`group rounded-2xl border transition-all duration-300 ${
-              file && uploadData
+              file
                 ? "border-green-500/50 bg-green-500/5"
                 : "border-slate-700 bg-slate-800/30"
-            } p-6 ${!uploadData && "opacity-50 pointer-events-none"}`}>
+            } p-6`}>
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-3">
                   <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${
@@ -376,7 +433,7 @@ export default function VideoPipeline() {
 
                 <button
                   onClick={handleUploadFile}
-                  disabled={!file || !uploadData || isUploading}
+                  disabled={!file || isUploading}
                   className="w-full py-3 px-4 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-500 hover:to-purple-600 disabled:opacity-50 text-white rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2 disabled:cursor-not-allowed"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -673,19 +730,28 @@ export default function VideoPipeline() {
                           </p>
                         </div>
                       </div>
-                      <button
-                        onClick={() => setSelectedVideo(null)}
-                        className="rounded-full border border-slate-700 bg-slate-900/70 p-1.5 text-slate-400 hover:border-slate-500 hover:text-slate-100"
-                      >
-                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M6 18L18 6M6 6l12 12"
-                          />
-                        </svg>
-                      </button>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => selectedVideo && handleDeleteVideo(selectedVideo)}
+                          disabled={!selectedVideo || deletingVideoId === selectedVideo.id}
+                          className="rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-1.5 text-xs font-semibold text-red-200 hover:border-red-400/70 hover:bg-red-500/15 disabled:opacity-60 disabled:cursor-not-allowed"
+                        >
+                          {deletingVideoId === selectedVideo.id ? "Deleting..." : "Delete"}
+                        </button>
+                        <button
+                          onClick={() => setSelectedVideo(null)}
+                          className="rounded-full border border-slate-700 bg-slate-900/70 p-1.5 text-slate-400 hover:border-slate-500 hover:text-slate-100"
+                        >
+                          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M6 18L18 6M6 6l12 12"
+                            />
+                          </svg>
+                        </button>
+                      </div>
                     </div>
 
                     <div className="grid gap-4 p-4 md:grid-cols-5">
