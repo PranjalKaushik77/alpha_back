@@ -702,8 +702,7 @@ export default function VideoPipeline() {
                               }}
                               className="h-full w-full bg-black"
                               style={{ aspectRatio: "16/9", width: "100%" }}
-                              primaryColor="black"
-                              secondaryColor="white"
+                              primaryColor="white"
                             />
                           ) : (
                             <div className="flex h-full items-center justify-center text-xs text-slate-500">
