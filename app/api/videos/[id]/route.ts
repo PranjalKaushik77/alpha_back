@@ -61,7 +61,8 @@ export async function DELETE(
     // Delete from Mux first (so we don't orphan assets)
     if (video.muxAssetId) {
       try {
-        await mux.video.assets.del(video.muxAssetId);
+        // The underlying SDK exposes `del`, but the TS types may not include it
+        await (mux.video.assets as any).del(video.muxAssetId);
       } catch (err) {
         // If the asset is already gone on Mux, still allow DB cleanup
         console.warn("Mux asset delete failed (continuing):", err);
