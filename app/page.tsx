@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import MuxPlayer from "@mux/mux-player-react";
 
 type LogEntry = {
   id: number;
@@ -692,10 +693,17 @@ export default function VideoPipeline() {
                       <div className="md:col-span-3">
                         <div className="relative aspect-video overflow-hidden rounded-xl border border-slate-800 bg-black">
                           {selectedVideo.muxPlaybackId ? (
-                            <video
-                              controls
+                            <MuxPlayer
+                              streamType="on-demand"
+                              playbackId={selectedVideo.muxPlaybackId}
+                              metadata={{
+                                video_title: selectedVideo.summary?.split("\n")[0] || "Video",
+                                video_id: selectedVideo.id,
+                              }}
                               className="h-full w-full bg-black"
-                              src={`https://stream.mux.com/${selectedVideo.muxPlaybackId}.m3u8`}
+                              style={{ aspectRatio: "16/9", width: "100%" }}
+                              primaryColor="#22d3ee"
+                              secondaryColor="#0891b2"
                             />
                           ) : (
                             <div className="flex h-full items-center justify-center text-xs text-slate-500">
